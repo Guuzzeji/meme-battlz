@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/lib/w3.css">
+    <link rel="stylesheet" href="/lib/buefy.min.css">
+    <link rel="stylesheet" href="/Css/all.css">
+    <link rel="stylesheet" href="/Css/start_page.css">
+    <link rel="icon" href="/img/icon.gif">
+    <script src="/lib/pixi.min.js"></script>
+    <script src="/lib/socket.io.slim.js"></script>
+    <script defer src="/Js/game.js"></script>
+    <title>Meme-Battlz</title>
+</head>
+<body>
+    <div id="app">
+
+        <div id="start.html" class="w3-container" style="display: none;">
+            <div style="background-color: white; border-radius: 5px; padding: 15px; width: 70%;" class="w3-display-middle">
+                <b-field label="Name">
+                    <b-input placeholder="Username..." id="username"></b-input>
+                </b-field>
+                <br>
+                <center>
+                    <b-button size="is-medium" type="is-success" style="width: 100%;" onclick="play_start_btn()">Play</b-button>
+                    <!--Redo play btn function-->
+                </center>
+            </div>
+        </div>
+
+        <div id="game.html" class="w3-container" style="display: none;">
+            <br>
+            <div>
+                <img width="25px" src="/img/icon.gif" alt="">
+                <label style="font-size: 20px; color: white;">-Meme-Battlz-</label>
+                <img width="25px" src="/img/icon.gif" alt="">
+                <b-button type="is-danger" onclick="leave_btn()">Leave Game</b-button>
+            </div>
+            <br>
+            <div style="width: 100%; border-width: 1px; border-style: solid; padding: 10px; border-radius: 5px; background-color: white; position: -webkit-sticky; position: sticky; top:5px; overflow: hidden;">
+                <center>
+                    <img src="/img/timer.png" width="40px" alt=""><label id="timer_" style="font-size: 25px;">0</label> |
+                    <label>Round </label><label id="round">0</label> | <label>Reviewer </label><label id="reviewer_label"></label> |
+                    <button onclick="document.getElementById('player_list_modal').style.display='block'; get_player()" class="w3-button">Show Score Board</button>
+                </center>
+            </div>
+            <!--Other pages-->
+            <div>
+                <div id="_picked_meme_image" class="w3-container" style="display: none;"> 
+                    <br>
+                    <div style="padding: 10px;" >
+                        <div>
+                            <center>
+                                <img class="w3-image" width="300px" style="border-radius: 5px;" src="/img/waiting_for_other.gif" alt="">
+                            </center>
+                        </div>
+                        <br>
+                        <center>
+                                <div style="background-color: white; width: 300px; border-radius: 5px;">
+                                    <Label>Waiting for Reviewer to pick a image...</Label><br>
+                                    <br>
+                                </div>
+                        </center>
+                    </div>
+                    <br>
+                </div>
+
+                <div id="round_has_started" class="w3-container" style="display: none;">
+                    <br>
+                    <div style="padding: 10px;">
+                        <div>
+                            <center>
+                                <img class="w3-image" width="250px" style="border-radius: 5px;" src="/img/round_has_started.gif" alt="">
+                            </center>
+                        </div>
+                        <br>
+                            <!-- Trigger/Open the Modal -->
+                            <center>
+                                <div style="background-color: white; border-radius: 5px; width: 300px;">
+                                    <Label>Sorry round has already started.</Label><br>
+                                    <label> Please wait for this round to end...</label>
+                                    <br>
+                                    <div id="vote_has_start">
+
+                                    </div>
+                                </div>
+                            </center>
+                    </div>
+                    <br>
+                </div>
+
+                <div id="game_meme_maker" class="w3-container" style="display: none;">
+                    <br>
+                    <div class="w3-row">
+                        <div class="w3-half" style="padding: 5px;">
+                            <center>
+                                <div id="memecan">
+        
+                                </div>
+                            </center>
+                            <div>
+                                <center>
+                                    <button id="lock_image_btn" class="w3-button" style="width: 300px; color:white;" onclick="lock_image_btn()">Lock Image OFF</button><br>
+                                    <button class="w3-button w3-green w3-round w3-hover-green" style="width: 300px;" onclick="export_base64()">Done!</button>
+                                </center>
+                            </div>
+                            
+                            <br>
+                        </div>
+                        <div class="w3-half" style="padding: 5px;">
+                            <textarea cols="20" rows="6" style="width: 100%; border-radius: 5px; padding: 5px;" placeholder="Meme Text..." id="text_meme_input"></textarea>
+                            <div class="w3-row">
+                                <div class="w3-half" style="padding: 5px;">
+                                    <b-button type="is-primary" style="width: 100%;" onclick="add_text()">Add Text</b-button>
+                                </div>
+                                <div class="w3-half" style="padding: 5px;">
+                                    <b-button type="is-danger" style="width: 100%;" onclick="click_remove()" id="remove_text_btn">Remove Text OFF</b-button>
+                                </div>
+                                <br>
+                                <div style="padding: 5px;">
+                                    <b-collapse :open="false" aria-id="contentIdForA11y1">
+                                        <button
+                                            class="button is-info"
+                                            type="is-info"
+                                            slot="trigger"
+                                            style="width: 100%;"
+                                            aria-controls="contentIdForA11y1"><img src="/img/style_text.png" width="30px" alt=""></button>
+                                        <div class="notification">
+                                            <div class="content">
+                                                <b-dropdown aria-role="list">
+                                                    <button class="button is-primary" slot="trigger" slot-scope="{ active }">
+                                                        <span id="font_in_use">Arial</span>
+                                                        <b-icon :icon="active ? 'menu-up' : 'menu-down'"></b-icon>
+                                                    </button>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Georgia')">Georgia</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Arial')">Arial</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Arial Black')">Arial Black</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Impact')">Impact</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Lucida Sans Unicode')">Lucida Sans Unicode</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Tahoma')">Tahoma</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Trebuchet MS')">Trebuchet MS</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Comic Sans MS')">Comic Sans MS</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Verdana')">Verdana</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Courier New')">Courier New</b-dropdown-item>
+                                                    <b-dropdown-item aria-role="listitem" value='Arial' onclick="get_font('Lucida Console')">Lucida Console</b-dropdown-item>
+                                                </b-dropdown>
+                                                <br>
+                                                <b-field label="Font Size">
+                                                    <b-numberinput min="10" controls-position="compact" id="font_size">
+                                                    </b-numberinput>
+                                                </b-field>
+                                                <b-field label="Font Color">
+                                                    <input type="color" id="fill_text" value="#000000">
+                                                </b-field>
+                                                <b-field label="Outline Size">
+                                                    <b-numberinput min="0" controls-position="compact" id="font_outline_width"></b-numberinput>
+                                                </b-field>
+                                                <b-field label="Outline Color">
+                                                    <input type="color" id="fill_outline" value="#000000">
+                                                </b-field>
+                                            </div>
+                                        </div>
+                                    </b-collapse>
+                                </div>
+                            </div>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="meme_reviewer" class="w3-container" style="display: none;">
+                    <br>
+                    <div style="background-color: white; border-radius: 5px;">
+                        <br>
+                        <center>
+                            <label id="meme_done_list_check">No Memes To Look At Yet</label>
+                            <br>
+                            <label>Click the image to pick the winner</label>
+                        </center>
+                        <hr>
+                        <div>
+                            <center>
+                                <div id="meme_scroll">
+            
+                                </div>
+                            </center>
+                            <hr>
+                            <div>
+                                <center>
+                                    <b-button type="is-primary" onclick="plusDivs(-1)"> < </b-button>
+                                    <b-button type="is-success" onclick="zoom_btn()">Zoom</b-button>
+                                    <b-button type="is-primary" onclick="plusDivs(1)"> > </b-button>
+                                </center>
+                            </div>
+                            <br>
+                            <br>
+                        </div>
+                    </div>
+                    <!-- The Modal -->
+                    <div id="show_imgs" class="w3-modal">
+                    <div class="w3-modal-content">
+                        <div class="w3-container">
+                        <br>
+                        <center><label style="font-size: 30px;">You Are The Meme Reviewer</label></center>
+                        <br>
+                        <label>Pick A Image To Meme</label>
+                        <br>
+                        <br>
+                            <center>
+                                <div class="w3-row" id="img_picker">
+                                </div>
+                            </center>
+
+                            <br>
+                        </div>
+                        </div>
+                        </div>
+                </div>
+
+                <div id="wait_for_other_player_to_submit" class="w3-container" style="display: none;">
+                    <br>
+                    <div style="padding: 10px;">
+                        <div>
+                            <center>
+                                <img class="w3-image" width="300px" src="/img/round_has_started.gif" alt="">
+                            </center>
+                        </div>
+                        <br>
+                        <center>
+                            <div style="background-color: white; border-radius: 5px; width: 300px;">
+                                <Label>Wating For other Players...</Label><br>
+                            </div>
+                            <br>
+                        </center>
+                    </div>
+                    <br>
+                </div>
+
+                <div id="out_of_time"  class="w3-container" style="display: none;">
+                    <br>
+                    <div>
+                        <center>
+                            <img class="w3-image" width="300px" style="border-radius: 5px;" src="/img/error_.gif" alt="">
+                        </center>
+                    </div>
+                    <br>
+                        <center>
+                            <div style="background-color: white; width: 300px; border-radius: 5px;">
+                                <Label>OUT OF TIME</Label><br>
+                                <br>
+                            </div>
+                        </center>
+                </div>
+
+                <div id="no_one_submit" class="w3-container" style="display: none;">
+                    <br>
+                    <div style="padding: 10px;">
+                        <div>
+                            <center>
+                                <img class="w3-image" width="300px" style="border-radius: 5px;" src="/img/round_has_started.gif" alt="">
+                            </center>
+                        </div>
+                        <br>
+                            <!-- Trigger/Open the Modal -->
+                            <center>
+                                <div style="background-color: white; border-radius: 5px; width: 300px;">
+                                    <Label>Wtf no one submit a meme shit...</Label><br>
+                                    <br>
+                                    <div id="vote_no_submit">
+
+                                    </div>
+                                </div>
+                            </center>
+                    </div>
+                    <br>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="room.html" class="w3-container" style="display: none;">
+            <div style="padding-top: 10px;">
+                <div class="w3-row">
+                    <img width="30px"  src="/img/icon.gif" alt="">
+                    <label style="font-size: 20px; color: white;">-Meme-Battlz-</label>
+                    <img width="30px"  src="/img/icon.gif" alt="">
+                </div>
+                <br>
+                <div style="padding: 10px; background-color: white; border-radius: 5px;">
+                    <h2 style="font-size:20px">Room</h2>
+                    <hr>
+                    <table class="w3-table w3-striped" id="room_list">
+
+                    </table>
+                    <br>
+                    <div id="vote_room">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_other_meme.html" class="w3-container" style="display: none;">
+            <div style="padding-top: 10px;">
+                <div>
+                    <img width="30px" src="/img/icon.gif" alt="">
+                    <label style="font-size: 25px; color: white;">-Meme-Battlz-</label>
+                    <img width="30px" src="/img/icon.gif" alt="">
+                </div>
+            <br>
+            <div style="padding: 10px; background-color: white; border-radius: 5px;">
+                <h2>Memes Created</h2>
+                <hr>
+                <div class="w3-row" class="w3-cell">
+                    <button onclick="document.getElementById('player_list_modal').style.display='block'; get_player()" class="w3-button">Show Score Board</button>
+                    <br>
+                    <br>
+                    <center>
+                        <div id="other_memes">
+
+                        </div>
+                    </center>             
+                </div>
+                <br>
+                <center>
+                    <div id='vote_look_other'>
+                    </div>
+                </center>
+            </div>
+        </div>
+        </div>
+
+        <div id="winner_screen.html" class="w3-container" style="display: none;">
+            <br>
+            <div style="padding: 10px;" class="background_winner">
+                <div>
+                    <center>
+                        <div style="background-color: white; border-radius: 5px; width: 300px;">
+                            <img width="250px" class="w3-image" src="/img/winner_screen_title.gif" alt="">
+                            <hr>
+                            <div style="border-width: 1px; border-color: black;">
+                                <img class="w3-image" width="300px" id="winner_image" alt="">
+                            </div>
+                            <hr>
+                            <label id="winner_name"></label>
+                            <br>
+                            <label>[ID]</label><label id="winner_id"></label>
+                            <br>
+                            <b-button type="is-primary" onclick="look_other_meme_btn()">Look At The Other Memes</b-button>
+                            <br>
+                            <button onclick="document.getElementById('player_list_modal').style.display='block'; get_player()" class="w3-button">Show Score Board</button>
+                            <br>
+                            <br>
+                        </div>
+                    </center>
+                </div>
+                <br>
+                <center>
+                    <div style="background-color: white; border-radius: 5px; width: 300px;">
+                        <div id="vote_winner">
+
+                        </div>
+                    </div>
+                </center>
+            </div>
+            <br>
+            <br>
+        </div>
+
+        <div id="game_over.html" class="w3-container" style="display: none;">
+            <div style="padding-top: 10px;">
+                <div class="w3-row">
+                    <img width="30px"  src="/img/icon.gif" alt="">
+                    <label style="font-size: 20px; color: white;">-Meme-Battlz-</label>
+                    <img width="30px"  src="/img/icon.gif" alt="">
+                </div>
+                <br>
+                <div style="padding: 10px; background-color: white; border-radius: 5px;">
+                    <h2 style="font-size:20px">Game Over</h2>
+                    <hr>
+                    <table class="w3-table w3-striped" id="game_over_list">
+
+                    </table>
+                    <br>
+                </div>
+                <br>
+                <div>
+                    <center>
+                            <b-button type="is-danger" onclick="leave_btn()">Leave Game</b-button>
+                    </center>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Modal -->
+        <div id="player_list_modal" class="w3-modal">
+            <div class="w3-modal-content">
+                <div class="w3-container">
+                    <span onclick="document.getElementById('player_list_modal').style.display='none'"
+                    class="w3-button w3-display-topright">&times;</span>
+                        <br>
+                            <div>
+                                <table class="w3-table w3-striped" id="player_list_modal_table">
+                                    
+                                </table>
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+        </div>
+
+        <div id="vote_when_through" style="display: none;">
+            <br>
+            <center>
+                <div style="background-color: white; width: 80%; border-radius: 5px;">
+                    <div class="w3-container" style="padding: 10px;">
+                        <center><label style="font-size:18px">Voted</label></center>
+                    </div>
+                </div>
+            </center>
+        </div>
+
+        <div id="zoom_image_model" class="w3-modal w3-animate-zoom" onclick="this.style.display='none'">
+            <span onclick="document.getElementById('zoom_image_model').style.display='none'" class="w3-button w3-hover-red w3-xlarge w3-display-topright">&times;</span>
+            <div class="w3-modal-content">
+                <center>
+                    <img src="" id="zoom_img" style="width: 90%;" class="w3-image">
+                </center>
+            </div>
+            <br>
+        </div>
+
+        <!--PARTS-->
+        <div id="vote_system" style="display: none;">
+            <div style="padding: 10px;">
+                <b-button type="is-success" onclick="start_round_vote()">Start Game</b-button>
+                <b-button type="is-danger" onclick="leave_btn()">Leave Game</b-button>
+            </div>
+        </div>
+
+    </div>
+    <script src="/lib/vue.js"></script>
+    <script src="/lib/buefy.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+        })
+    </script>
+</body>
+</html>

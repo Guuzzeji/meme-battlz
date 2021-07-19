@@ -1,0 +1,21 @@
+{
+  "name": "meme-battlz",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js"
+  },
+  "author": "none",
+  "license": "MIT",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "compression": "^1.7.4",
+    "express": "^4.17.1",
+    "figlet": "^1.4.0",
+    "helmet": "^3.23.0",
+    "ngrok": "^3.2.7",
+    "shortid": "^2.2.15",
+    "socket.io": "^2.3.0"
+  }
+}
